@@ -15,7 +15,7 @@
     <shaded.jar.name>weld-core-benchmarks</shaded.jar.name>
     <!-- Versions -->
     <version.jmh>1.37</version.jmh>
-    <version.weld>5.1.1.SP2</version.weld>
+    <version.weld>5.1.2-SNAPSHOT</version.weld>
     <version.cdi>4.0.1</version.cdi>
     <version.xchart>3.5.0</version.xchart>
     <version.gson>2.8.2</version.gson>
@@ -46,6 +46,7 @@
       <version>${version.xchart}</version>
     </dependency>
 
+    <!-- TODO update? -->
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
@@ -58,6 +59,7 @@
       <version>${version.jandex}</version>
     </dependency>
 
+    <!-- TODO update? -->
     <dependency>
       <groupId>org.trimou</groupId>
       <artifactId>trimou-extension-gson</artifactId>

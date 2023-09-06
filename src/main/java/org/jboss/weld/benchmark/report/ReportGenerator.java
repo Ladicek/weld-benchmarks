@@ -93,6 +93,11 @@ public class ReportGenerator {
         if (files.isEmpty()) {
             throw new IllegalStateException("No results to process!");
         }
+        if (files.size() == 1) {
+            // benchmark was run for a singular version, no need to generate comparison
+            System.out.println("Report generation skipped since only one version of Weld was specified.");
+            return;
+        }
         File outputPath = args.length < 2 ? new File(System.getProperty("user.dir")) : new File(args[1]);
         if (!outputPath.exists()) {
             outputPath.mkdirs();
