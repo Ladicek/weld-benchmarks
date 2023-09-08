@@ -1,13 +1,15 @@
 package org.jboss.weld.benchmark.core.invokableMethods;
 
-import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.invoke.Invokable;
+import org.openjdk.jmh.infra.Blackhole;
 
-@RequestScoped
+@Dependent
 public class InvokableBean {
 
     @Invokable
     public String ping(String s, Boolean b) {
-        return InvokableBean.class.getSimpleName();
+        Blackhole.consumeCPU(20);
+        return "InvokableBean";
     }
 }
