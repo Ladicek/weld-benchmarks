@@ -2,7 +2,6 @@ package org.jboss.weld.benchmark.core.invokableMethods;
 
 import static org.jboss.weld.benchmark.core.Configuration.BATCH_SIZE_NORMAL;
 import static org.jboss.weld.benchmark.core.Configuration.FORKS;
-import static org.openjdk.jmh.annotations.Threads.MAX;
 
 import jakarta.enterprise.invoke.Invoker;
 import jakarta.enterprise.util.AnnotationLiteral;
@@ -20,12 +19,9 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
-import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.annotations.Warmup;
 
 @Fork(FORKS)
-@Threads(MAX)
-//@Threads(MAX) TODO this leads to concurrent modification exception due to race condition in cleanup actions of invokers!
 @BenchmarkMode(Mode.Throughput)
 @Warmup(batchSize = BATCH_SIZE_NORMAL, iterations = Configuration.ITERATIONS, time = 5)
 @Measurement(batchSize = BATCH_SIZE_NORMAL, iterations = Configuration.ITERATIONS, time = 5)
@@ -36,8 +32,8 @@ public abstract class   InvokableMethodBenchmarkBase {
 
     protected InvokableBean bean;
     protected PortableExtension extension;
-    protected Invoker<InvokableBean, ?> invoker;
-    protected Invoker<InvokableBean, ?> lookupAllInvoker;
+    protected Invoker<InvokableBean, String> invoker;
+    protected Invoker<InvokableBean, String> lookupAllInvoker;
 
     protected String dummyStringArg = "foo";
     protected Object[] dummyMethodArgs = new Object[]{dummyStringArg, Boolean.TRUE};
@@ -71,8 +67,8 @@ public abstract class   InvokableMethodBenchmarkBase {
     public void setup(ContainerState containerState) {
         bean = containerState.getContainer().select(InvokableBean.class).get();
         extension = containerState.getContainer().select(PortableExtension.class).get();
-        invoker = extension.getInvoker();
-        lookupAllInvoker = extension.getLookupAllInvokerInvoker();
+        invoker = (Invoker<InvokableBean, String>) extension.getInvoker();
+        lookupAllInvoker = (Invoker<InvokableBean, String>) extension.getLookupAllInvokerInvoker();
         requestContext = containerState.getContainer().select(RequestContext.class, new AnnotationLiteral<Unbound>() {
         }).get();
         requestContext.activate();
@@ -85,9 +81,10 @@ public abstract class   InvokableMethodBenchmarkBase {
     }
 
     @Benchmark
-    public void run() {
-        performInvoke();
+    public String run() {
+        // return result of benchmark to avoid dead code elimination
+        return performInvoke();
     }
 
-    protected abstract void performInvoke();
+    protected abstract String performInvoke();
 }
