@@ -3,6 +3,9 @@ package org.jboss.weld.benchmark.core.invokableMethods;
 import static org.jboss.weld.benchmark.core.Configuration.BATCH_SIZE_NORMAL;
 import static org.jboss.weld.benchmark.core.Configuration.FORKS;
 
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.spi.BeanContainer;
+import jakarta.enterprise.inject.spi.CDI;
 import jakarta.enterprise.invoke.Invoker;
 import org.jboss.weld.benchmark.core.Configuration;
 import org.jboss.weld.environment.se.Weld;
@@ -26,6 +29,7 @@ import org.openjdk.jmh.annotations.Warmup;
 public class InvokableMethodBenchmark {
 
     Weld weld;
+    BeanContainer container;
 
     InvokableBean bean;
 
@@ -36,10 +40,11 @@ public class InvokableMethodBenchmark {
     public void setup() {
         weld = new Weld();
         weld.addExtensions(PortableExtension.class);
-        WeldContainer container = weld.initialize();
-        PortableExtension extension = container.select(PortableExtension.class).get();
+        WeldContainer weldContainer = weld.initialize();
+        PortableExtension extension = weldContainer.select(PortableExtension.class).get();
+        container = weldContainer.getBeanContainer();
 
-        bean = container.select(InvokableBean.class).get();
+        bean = weldContainer.select(InvokableBean.class).get();
 
         invoker = (Invoker<InvokableBean, String>) extension.getInvoker();
         lookupAllInvoker = (Invoker<InvokableBean, String>) extension.getLookupAllInvokerInvoker();
@@ -61,7 +66,43 @@ public class InvokableMethodBenchmark {
     }
 
     @Benchmark
-    public String invocationThroughInvokerWithLookups() {
+    public String directInvocation_manualLookups() {
+        Instance<Object> lookup = container.createInstance();
+        InvokableBean bean = null;
+        String string = null;
+        Boolean bool = null;
+        try {
+            bean = lookup.select(InvokableBean.class).get();
+            string = lookup.select(String.class).get();
+            bool = lookup.select(Boolean.class).get();
+            return bean.ping(string, bool);
+        } finally {
+            lookup.destroy(bean);
+            lookup.destroy(string);
+            lookup.destroy(bool);
+        }
+    }
+
+    @Benchmark
+    public String invocationThroughInvoker_manualLookups() {
+        Instance<Object> lookup = container.createInstance();
+        InvokableBean bean = null;
+        String string = null;
+        Boolean bool = null;
+        try {
+            bean = lookup.select(InvokableBean.class).get();
+            string = lookup.select(String.class).get();
+            bool = lookup.select(Boolean.class).get();
+            return invoker.invoke(bean, new Object[]{string, bool});
+        } finally {
+            lookup.destroy(bean);
+            lookup.destroy(string);
+            lookup.destroy(bool);
+        }
+    }
+
+    @Benchmark
+    public String invocationThroughInvoker_invokerLookups() {
         return lookupAllInvoker.invoke(bean, new Object[]{null, null});
     }
 }
